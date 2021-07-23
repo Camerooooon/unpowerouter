@@ -3,14 +3,37 @@ use std::fs::{File};
 use std::io::Read;
 use std::path::Path;
 use std::{thread, time};
+use std::matches;
 
 pub mod error;
 
+// Charging may also signify the battery is full
+pub enum PowerLevel {
+    SHUTTING_DOWN,
+    CRITICAL,
+    LOW,
+    CHARGING,
+    UNKNOWN,
+}
+
 fn main() {
+
+    let mut state: PowerLevel = PowerLevel::UNKNOWN;
+
     loop {
         match read_battery_charge() {
-            Ok(p) => {
+            Ok(mut p) => {
+                p = 5;
+                // For testing purposes
+
+                if p <= 5 && !matches!(state, PowerLevel::CRITICAL) {
+                    state = PowerLevel::CRITICAL;
+                    println!("Power state is now CRITICAL.");
+                }
                 println!("Power {}", p);
+
+
+
             }
             Err(_) => {
                 println!("Failed");
