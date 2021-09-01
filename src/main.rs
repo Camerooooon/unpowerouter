@@ -35,7 +35,7 @@ fn main() {
                 match on_ac() {
                     Ok(mut b) => {
                         // For testing purposes
-                        //p = 5;
+                        //p = 2;
 
                         if p <= 5 && p > 3 && !matches!(state, PowerLevel::CRITICAL) && !b {
                             Notification::new()
@@ -86,7 +86,7 @@ fn main() {
                 println!("Failed to check battery charge level");
             }
         }
-        thread::sleep(Duration::from_millis(500));
+        thread::sleep(Duration::from_millis(5000));
     }
 }
 
