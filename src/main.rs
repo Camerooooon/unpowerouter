@@ -1,16 +1,16 @@
 extern crate system_shutdown;
 
 use error::Error;
+use notify_rust::{Notification, Urgency};
 use std::fs::File;
 use std::io::{stdin, BufRead, Read};
 use std::matches;
 use std::path::Path;
+use std::process::Command;
 use std::sync::mpsc::{self, Sender, TryRecvError};
 use std::{thread, time};
-use std::process::Command;
-use notify_rust::{Notification, Urgency};
-use time::Duration;
 use system_shutdown::shutdown;
+use time::Duration;
 
 pub mod error;
 
@@ -35,17 +35,27 @@ fn main() {
                 match on_ac() {
                     Ok(mut b) => {
                         // For testing purposes
-                        //p = 2;
+                        //p = 5;
 
                         if p <= 5 && p > 3 && !matches!(state, PowerLevel::CRITICAL) && !b {
+                            Notification::new()
+                                .summary("Warning battery charge is critical!")
+                                .appname("Battery")
+                                .urgency(Urgency::Critical)
+                                .show();
                             state = PowerLevel::CRITICAL;
                             println!("Power state is now CRITICAL.");
                         }
                         if p <= 20 && p > 5 && !matches!(state, PowerLevel::LOW) && !b {
+                            Notification::new()
+                                .summary("Warning battery charge is low!")
+                                .appname("Battery")
+                                .urgency(Urgency::Critical)
+                                .show();
                             state = PowerLevel::LOW;
                             println!("Power state is now LOW.");
                         }
-                        
+
                         if p > 20 && !matches!(state, PowerLevel::NORMAL) && !b {
                             state = PowerLevel::NORMAL;
                             println!("Power state is now NORMAL.");
@@ -87,13 +97,21 @@ pub fn spawn_shutdown_task() -> Sender<()> {
 
     thread::spawn(move || loop {
         println!("Shutdown...{}", i);
-        Notification::new().summary(&format!("Low power shutdown iminent in {} to prevent damage to battery", i)).appname("Battery").urgency(Urgency::Critical).timeout(1009).show();
+        Notification::new()
+            .summary(&format!(
+                "Low power shutdown iminent in {} to prevent damage to battery",
+                i
+            ))
+            .appname("Battery")
+            .urgency(Urgency::Critical)
+            .timeout(1009)
+            .show();
 
         if (i <= 0) {
-                match shutdown() {
-                    Ok(_) => println!("Shutting down, bye!"),
-                    Err(error) => eprintln!("Failed to shut down: {}", error),
-                }
+            match shutdown() {
+                Ok(_) => println!("Shutting down, bye!"),
+                Err(error) => eprintln!("Failed to shut down: {}", error),
+            }
         }
 
         i = i - 1;
