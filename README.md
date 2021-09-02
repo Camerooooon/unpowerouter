@@ -9,6 +9,7 @@ Compile the binary
 
 Do the systemd stuff so unpoweroutter starts with your computer
 ```
+# MAKE SURE TO MODIFY unpoweroutter.service to include the correct path to your unpoweroutter binary
 $ cp unpoweroutter.service /etc/systemd/system/unpoweroutter.service
 $ systemctl start unpoweroutter
 $ systemctl enable unpoweroutter
