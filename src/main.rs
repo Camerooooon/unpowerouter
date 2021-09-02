@@ -86,7 +86,7 @@ fn main() {
                 println!("Failed to check battery charge level");
             }
         }
-        thread::sleep(Duration::from_millis(5000));
+        thread::sleep(Duration::from_millis(500));
     }
 }
 

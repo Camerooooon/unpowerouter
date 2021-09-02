@@ -1,0 +1,8 @@
+[Unit]
+Description=Battery Manager
+
+[Service]
+ExecStart=/home/cameron/.cargo/bin/unpoweroutter
+
+[Install]
+WantedBy=multi-user.target
