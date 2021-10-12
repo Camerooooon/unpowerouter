@@ -37,6 +37,20 @@ fn main() {
                         // For testing purposes
                         //p = 2;
 
+                        if !b {
+                            if matches!(state, PowerLevel::CHARGING) {
+                                println!("Computer is now on battery power");
+                                Notification::new()
+                                    .summary(
+                                        "Computer is now on battery power"
+                                    )
+                                    .appname("Battery")
+                                    .urgency(Urgency::Normal)
+                                    .timeout(6900)
+                                    .show();
+                            }
+                        }
+
                         if p <= 5 && p > 3 && !matches!(state, PowerLevel::CRITICAL) && !b {
                             Notification::new()
                                 .summary("Warning battery charge is critical!")
@@ -74,6 +88,14 @@ fn main() {
                             if !matches!(state, PowerLevel::CHARGING) {
                                 state = PowerLevel::CHARGING;
                                 println!("Computer is now on AC power");
+                                Notification::new()
+                                    .summary(
+                                        "Computer is now on AC power"
+                                    )
+                                    .appname("Battery")
+                                    .urgency(Urgency::Normal)
+                                    .timeout(6900)
+                                    .show();
                             }
                         }
                     }
@@ -132,13 +154,18 @@ pub fn spawn_shutdown_task() -> Sender<()> {
 }
 
 pub fn on_ac() -> Result<bool, Error> {
+    let mut path = "AC0";
     if !Path::new("/sys/class/power_supply/AC0/online").exists() {
-        println!("Unexpected, the directory /sys/class/power_supple/AC0/online doesn't exist? Do you not have a power source?");
-        return Ok(true);
+        if !Path::new("/sys/class/power_supply/AC/online").exists() {
+            println!("Unexpected, the directory /sys/class/power_supple/(Neither AC nor AC0)/online doesn't exist? Do you not have a power source?");
+            return Ok(true);
+        } else {
+            path = "AC";
+        }
     }
 
     let mut pwr_str: String = String::new();
-    File::open("/sys/class/power_supply/AC0/online")?.read_to_string(&mut pwr_str)?;
+    File::open(format!("/sys/class/power_supply/{}/online", path))?.read_to_string(&mut pwr_str)?;
 
     // Remove the \n char
     pwr_str.pop();
