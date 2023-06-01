@@ -65,6 +65,7 @@ fn main() {
                                 .body("Warning battery charge is low!")
                                 .appname("Battery")
                                 .urgency(Urgency::Critical)
+                                .timeout(9000)
                                 .show();
                             state = PowerLevel::LOW;
                             println!("Power state is now LOW.");
