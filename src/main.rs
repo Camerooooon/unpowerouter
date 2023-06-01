@@ -51,7 +51,8 @@ fn main() {
 
                         if p <= 5 && p > 3 && !matches!(state, PowerLevel::CRITICAL) && !on_ac {
                             Notification::new()
-                                .summary("Warning battery charge is critical!")
+                                .summary("Battery Management")
+                                .body("Warning battery charge is critical!")
                                 .appname("Battery")
                                 .urgency(Urgency::Critical)
                                 .show();
@@ -60,7 +61,8 @@ fn main() {
                         }
                         if p <= 20 && p > 5 && !matches!(state, PowerLevel::LOW) && !on_ac {
                             Notification::new()
-                                .summary("Warning battery charge is low!")
+                                .summary("Battery Management")
+                                .body("Warning battery charge is low!")
                                 .appname("Battery")
                                 .urgency(Urgency::Critical)
                                 .show();
@@ -116,8 +118,9 @@ pub fn spawn_shutdown_task() -> Sender<()> {
     thread::spawn(move || loop {
         println!("Shutdown...{}", i);
         Notification::new()
-            .summary(&format!(
-                "Low power shutdown imminent in {} to prevent damage to battery",
+            .summary("Battery Management")
+            .body(&format!(
+                "Shutdown imminent in {} seconds to prevent damage to battery",
                 i
             ))
             .appname("Battery")
