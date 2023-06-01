@@ -33,17 +33,15 @@ fn main() {
         match read_battery_charge() {
             Ok(mut p) => {
                 match on_ac() {
-                    Ok(mut b) => {
+                    Ok(mut on_ac) => {
                         // For testing purposes
                         //p = 2;
 
-                        if !b {
+                        if !on_ac {
                             if matches!(state, PowerLevel::CHARGING) {
                                 println!("Computer is now on battery power");
                                 Notification::new()
-                                    .summary(
-                                        "Computer is now on battery power"
-                                    )
+                                    .summary("Computer is now on battery power")
                                     .appname("Battery")
                                     .urgency(Urgency::Normal)
                                     .timeout(6900)
@@ -51,7 +49,7 @@ fn main() {
                             }
                         }
 
-                        if p <= 5 && p > 3 && !matches!(state, PowerLevel::CRITICAL) && !b {
+                        if p <= 5 && p > 3 && !matches!(state, PowerLevel::CRITICAL) && !on_ac {
                             Notification::new()
                                 .summary("Warning battery charge is critical!")
                                 .appname("Battery")
@@ -60,7 +58,7 @@ fn main() {
                             state = PowerLevel::CRITICAL;
                             println!("Power state is now CRITICAL.");
                         }
-                        if p <= 20 && p > 5 && !matches!(state, PowerLevel::LOW) && !b {
+                        if p <= 20 && p > 5 && !matches!(state, PowerLevel::LOW) && !on_ac {
                             Notification::new()
                                 .summary("Warning battery charge is low!")
                                 .appname("Battery")
@@ -70,18 +68,18 @@ fn main() {
                             println!("Power state is now LOW.");
                         }
 
-                        if p > 20 && !matches!(state, PowerLevel::NORMAL) && !b {
+                        if p > 20 && !matches!(state, PowerLevel::NORMAL) && !on_ac {
                             state = PowerLevel::NORMAL;
                             println!("Power state is now NORMAL.");
                         }
 
-                        if p <= 3 && !matches!(state, PowerLevel::SHUTTING_DOWN) && !b {
+                        if p <= 3 && !matches!(state, PowerLevel::SHUTTING_DOWN) && !on_ac {
                             state = PowerLevel::SHUTTING_DOWN;
                             println!("Shutdown initiated!");
                             tx = spawn_shutdown_task();
                         }
 
-                        if b {
+                        if on_ac {
                             if matches!(state, PowerLevel::SHUTTING_DOWN) {
                                 tx.send(());
                             }
@@ -89,9 +87,7 @@ fn main() {
                                 state = PowerLevel::CHARGING;
                                 println!("Computer is now on AC power");
                                 Notification::new()
-                                    .summary(
-                                        "Computer is now on AC power"
-                                    )
+                                    .summary("Computer is now on AC power")
                                     .appname("Battery")
                                     .urgency(Urgency::Normal)
                                     .timeout(6900)
@@ -121,12 +117,12 @@ pub fn spawn_shutdown_task() -> Sender<()> {
         println!("Shutdown...{}", i);
         Notification::new()
             .summary(&format!(
-                "Low power shutdown iminent in {} to prevent damage to battery",
+                "Low power shutdown imminent in {} to prevent damage to battery",
                 i
             ))
             .appname("Battery")
             .urgency(Urgency::Critical)
-            .timeout(1009)
+            .timeout(1008)
             .show();
 
         if (i <= 0) {
