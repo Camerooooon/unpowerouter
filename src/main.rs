@@ -12,6 +12,8 @@ use std::{thread, time};
 use system_shutdown::shutdown;
 use time::Duration;
 
+const UPDATES_PER_SECOND: i32 = 8; // The number of times to update the shutdown notification per second
+
 pub mod error;
 
 // Charging may also signify the battery is full
@@ -37,46 +39,46 @@ fn main() {
                         // For testing purposes
                         //p = 2;
 
-                        if !on_ac {
-                            if matches!(state, PowerLevel::CHARGING) {
-                                println!("Computer is now on battery power");
-                                Notification::new()
-                                    .summary("Computer is now on battery power")
-                                    .appname("Battery")
-                                    .urgency(Urgency::Normal)
-                                    .timeout(6900)
-                                    .show();
-                            }
-                        }
+                        //if !on_ac {
+                        //    if matches!(state, PowerLevel::CHARGING) {
+                        //        println!("Computer is now on battery power");
+                        //        Notification::new()
+                        //            .summary("Computer is now on battery power")
+                        //            .appname("Battery")
+                        //            .urgency(Urgency::Normal)
+                        //            .timeout(6900)
+                        //            .show();
+                        //    }
+                        //}
 
-                        if p <= 5 && p > 3 && !matches!(state, PowerLevel::CRITICAL) && !on_ac {
-                            Notification::new()
-                                .summary("Battery Management")
-                                .body("Warning battery charge is critical!")
-                                .appname("Battery")
-                                .urgency(Urgency::Critical)
-                                .show();
-                            state = PowerLevel::CRITICAL;
-                            println!("Power state is now CRITICAL.");
-                        }
-                        if p <= 20 && p > 5 && !matches!(state, PowerLevel::LOW) && !on_ac {
-                            Notification::new()
-                                .summary("Battery Management")
-                                .body("Warning battery charge is low!")
-                                .appname("Battery")
-                                .urgency(Urgency::Critical)
-                                .timeout(9000)
-                                .show();
-                            state = PowerLevel::LOW;
-                            println!("Power state is now LOW.");
-                        }
+                        //if p <= 5 && p > 3 && !matches!(state, PowerLevel::CRITICAL) && !on_ac {
+                        //    Notification::new()
+                        //        .summary("Battery Management")
+                        //        .body("Warning battery charge is critical!")
+                        //        .appname("Battery")
+                        //        .urgency(Urgency::Critical)
+                        //        .show();
+                        //    state = PowerLevel::CRITICAL;
+                        //    println!("Power state is now CRITICAL.");
+                        //}
+                        //if p <= 20 && p > 5 && !matches!(state, PowerLevel::LOW) && !on_ac {
+                        //    Notification::new()
+                        //        .summary("Battery Management")
+                        //        .body("Warning battery charge is low!")
+                        //        .appname("Battery")
+                        //        .urgency(Urgency::Critical)
+                        //        .timeout(9000)
+                        //        .show();
+                        //    state = PowerLevel::LOW;
+                        //    println!("Power state is now LOW.");
+                        //}
 
-                        if p > 20 && !matches!(state, PowerLevel::NORMAL) && !on_ac {
-                            state = PowerLevel::NORMAL;
-                            println!("Power state is now NORMAL.");
-                        }
+                        //if p > 20 && !matches!(state, PowerLevel::NORMAL) && !on_ac {
+                        //    state = PowerLevel::NORMAL;
+                        //    println!("Power state is now NORMAL.");
+                        //}
 
-                        if p <= 3 && !matches!(state, PowerLevel::SHUTTING_DOWN) && !on_ac {
+                        if p <= 90 && !matches!(state, PowerLevel::SHUTTING_DOWN) && !on_ac {
                             state = PowerLevel::SHUTTING_DOWN;
                             println!("Shutdown initiated!");
                             tx = spawn_shutdown_task();
@@ -114,17 +116,26 @@ fn main() {
 pub fn spawn_shutdown_task() -> Sender<()> {
     let (tx, rx) = mpsc::channel();
 
-    let mut i = 60;
+    let mut i = 60 * UPDATES_PER_SECOND;
 
     thread::spawn(move || loop {
         println!("Shutdown...{}", i);
+        let percent_to_shutdown = ((i as f32)/(60.0 * UPDATES_PER_SECOND as f32))*100.0;
+        let seconds_to_shutdown = i / UPDATES_PER_SECOND;
+        println!("Percent: {}", percent_to_shutdown);
         Notification::new()
             .summary("Battery Management")
             .body(&format!(
                 "Shutdown imminent in {} seconds to prevent damage to battery",
-                i
+                seconds_to_shutdown
             ))
+            .hint(notify_rust::Hint::CustomInt("value".to_string(), percent_to_shutdown.round() as i32))
+            .hint(notify_rust::Hint::Custom("x-dunst-stack-tag".to_string(), "shutdown".to_string()))
             .appname("Battery")
+            .icon({match (seconds_to_shutdown % 2 == 0) {
+                true => { "/usr/share/icons/Papirus/16x16/panel/battery-000.svg" },
+                _ => { "/usr/share/icons/Papirus/16x16/panel/battery-010.svg" }
+            }})
             .urgency(Urgency::Critical)
             .timeout(1008)
             .show();
@@ -137,7 +148,7 @@ pub fn spawn_shutdown_task() -> Sender<()> {
         }
 
         i = i - 1;
-        thread::sleep(Duration::from_millis(1000));
+        thread::sleep(Duration::from_millis(((1000 / UPDATES_PER_SECOND)) as u64));
         match rx.try_recv() {
             Ok(_) | Err(TryRecvError::Disconnected) => {
                 println!("Terminating shutdown thread.");
