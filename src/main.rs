@@ -36,49 +36,47 @@ fn main() {
             Ok(mut p) => {
                 match on_ac() {
                     Ok(mut on_ac) => {
-                        // For testing purposes
-                        //p = 2;
 
-                        //if !on_ac {
-                        //    if matches!(state, PowerLevel::CHARGING) {
-                        //        println!("Computer is now on battery power");
-                        //        Notification::new()
-                        //            .summary("Computer is now on battery power")
-                        //            .appname("Battery")
-                        //            .urgency(Urgency::Normal)
-                        //            .timeout(6900)
-                        //            .show();
-                        //    }
-                        //}
+                        if !on_ac {
+                            if matches!(state, PowerLevel::CHARGING) {
+                                println!("Computer is now on battery power");
+                                Notification::new()
+                                    .summary("Computer is now on battery power")
+                                    .appname("Battery")
+                                    .urgency(Urgency::Normal)
+                                    .timeout(6900)
+                                    .show();
+                            }
+                        }
 
-                        //if p <= 5 && p > 3 && !matches!(state, PowerLevel::CRITICAL) && !on_ac {
-                        //    Notification::new()
-                        //        .summary("Battery Management")
-                        //        .body("Warning battery charge is critical!")
-                        //        .appname("Battery")
-                        //        .urgency(Urgency::Critical)
-                        //        .show();
-                        //    state = PowerLevel::CRITICAL;
-                        //    println!("Power state is now CRITICAL.");
-                        //}
-                        //if p <= 20 && p > 5 && !matches!(state, PowerLevel::LOW) && !on_ac {
-                        //    Notification::new()
-                        //        .summary("Battery Management")
-                        //        .body("Warning battery charge is low!")
-                        //        .appname("Battery")
-                        //        .urgency(Urgency::Critical)
-                        //        .timeout(9000)
-                        //        .show();
-                        //    state = PowerLevel::LOW;
-                        //    println!("Power state is now LOW.");
-                        //}
+                        if p <= 5 && p > 3 && !matches!(state, PowerLevel::CRITICAL) && !on_ac {
+                            Notification::new()
+                                .summary("Battery Management")
+                                .body("Warning battery charge is critical!")
+                                .appname("Battery")
+                                .urgency(Urgency::Critical)
+                                .show();
+                            state = PowerLevel::CRITICAL;
+                            println!("Power state is now CRITICAL.");
+                        }
+                        if p <= 20 && p > 5 && !matches!(state, PowerLevel::LOW) && !on_ac {
+                            Notification::new()
+                                .summary("Battery Management")
+                                .body("Warning battery charge is low!")
+                                .appname("Battery")
+                                .urgency(Urgency::Critical)
+                                .timeout(9000)
+                                .show();
+                            state = PowerLevel::LOW;
+                            println!("Power state is now LOW.");
+                        }
 
-                        //if p > 20 && !matches!(state, PowerLevel::NORMAL) && !on_ac {
-                        //    state = PowerLevel::NORMAL;
-                        //    println!("Power state is now NORMAL.");
-                        //}
+                        if p > 20 && !matches!(state, PowerLevel::NORMAL) && !on_ac {
+                            state = PowerLevel::NORMAL;
+                            println!("Power state is now NORMAL.");
+                        }
 
-                        if p <= 90 && !matches!(state, PowerLevel::SHUTTING_DOWN) && !on_ac {
+                        if p <= 3 && !matches!(state, PowerLevel::SHUTTING_DOWN) && !on_ac {
                             state = PowerLevel::SHUTTING_DOWN;
                             println!("Shutdown initiated!");
                             tx = spawn_shutdown_task();
